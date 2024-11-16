@@ -120,7 +120,7 @@ if __name__ == "__main__":
         rewards_history.append(total_reward)    # Track rewards
 
         # Check for early stopping for the overall training
-        if total_reward > 270:
+        if total_reward > 320:
             print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
             torch.save(policy_net.state_dict(), f"models/DQN_lunar_lander_{hidden_units}.pth") # Save the model
             model_saved = True
