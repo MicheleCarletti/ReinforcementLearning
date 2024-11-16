@@ -73,18 +73,19 @@ def select_action(state, policy_net, epsilon, action_dim):
     return torch.argmax(q_values).item()  # Exploit: choose the action with the maximum Q value
 
 
-def train(memory, policy_net, target_net, optimizer, batch_size, gamma):
+def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta):
     """ Train the DQN model"""
-    if len(memory) < batch_size:
+    if len(memory.buffer) < batch_size:
         return
-    batch = random.sample(memory, batch_size)
-    states, actions, rewards, next_states, dones = zip(*batch)
+    
+    (states, actions, rewards, next_states, dones), indicies, weights = memory.sample(batch_size, beta)
 
     states = torch.FloatTensor(states).to(device)
     actions = torch.LongTensor(actions).unsqueeze(1).to(device)
     rewards = torch.FloatTensor(rewards).to(device)
     next_states = torch.FloatTensor(next_states).to(device)
     dones = torch.FloatTensor(dones).to(device)
+    weights = weights.to(device)
 
     # Compute actual Q values
     q_values = policy_net(states).gather(1, actions)
@@ -95,10 +96,14 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma):
         target_q_values = rewards + (1 - dones) * gamma * next_q_values
 
     # Compute the loss
-    loss = nn.MSELoss()(q_values.squeeze(), target_q_values)
+    loss = (torch.FloatTensor(weights) * (q_values.squeeze() - target_q_values)**2).mean()  # Weighted MSE
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+    # Update PER priorities
+    priorities = (q_values.squeeze() - target_q_values).abs().cpu().detach().numpy() + 1e-5
+    memory.update_priorities(indicies, priorities)
 
 if __name__ == "__main__":
 
@@ -113,6 +118,9 @@ if __name__ == "__main__":
     max_memory_size = 10000
     n_episodes = 800
     target_net_freq = 15    # Update frequency for target network
+    alpha = 0.6
+    beta = 0.4
+    beta_increment_per_episode = 0.001
 
     # Set-up the environment
     env = gym.make("LunarLander-v3", render_mode="human")
@@ -128,7 +136,7 @@ if __name__ == "__main__":
     target_net.eval()
 
     optimizer = optim.Adam(policy_net.parameters(), lr=learning_rate)
-    memory = deque(maxlen=max_memory_size)
+    memory = PER(max_memory_size, alpha)
 
     # Save rewards
     rewards_history = []
@@ -145,12 +153,12 @@ if __name__ == "__main__":
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
-            memory.append((state, action, reward, next_state, done))
+            memory.add(state, action, reward, next_state, done)
             state = next_state
             total_reward += reward
 
 
-            train(memory, policy_net, target_net, optimizer, batch_size, gamma)
+            train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta)
 
             # Check if total reward is so bad
             if total_reward < -150:
@@ -162,13 +170,15 @@ if __name__ == "__main__":
         # Check for early stopping for the overall training
         if total_reward > 270:
             print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
-            torch.save(policy_net.state_dict(), f"models/DQN_lunar_lander_{hidden_units}.pth") # Save the model
+            torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
             model_saved = True
             break
             
         # Decrease the epsion value
         if epsilon > epsilon_min:
             epsilon *= epsilon_decay
+        
+        beta = min(1.0, beta + beta_increment_per_episode)  # Upfdate beta value
 
         # Update the target network
         if episode % target_net_freq == 0:
@@ -178,7 +188,7 @@ if __name__ == "__main__":
 
     # If the training is completed save the model
     if not model_saved:
-        torch.save(policy_net.state_dict(), f"models/DQN_lunar_lander_{hidden_units}.pth") # Save the model
+        torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
 
     env.close()
 
