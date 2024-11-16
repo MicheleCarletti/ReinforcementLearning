@@ -1,6 +1,6 @@
 # DQN for lunar landing v3
 
-This project presents a RL agent trying to solve the OpenAI Gymnasium LunarLandig-v3 environment.
+This project presents a RL agent trying to solve the OpenAI Gymnasium LunarLanding-v3 environment.
 
 **Structure**
 
@@ -24,7 +24,7 @@ This project presents a RL agent trying to solve the OpenAI Gymnasium LunarLandi
 |Name|Email|
 |----|-----|
 |Michele Carletti|michelecarletti98@gmail.com|
-|
+
 
 
 
