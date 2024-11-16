@@ -73,7 +73,7 @@ def select_action(state, policy_net, epsilon, action_dim):
     return torch.argmax(q_values).item()  # Exploit: choose the action with the maximum Q value
 
 
-def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta):
+def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, losses):
     """ Train the DQN model"""
     if len(memory.buffer) < batch_size:
         return
@@ -101,6 +101,7 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta):
     loss.backward()
     optimizer.step()
 
+    losses.append(loss.item())
     # Update PER priorities
     priorities = (q_values.squeeze() - target_q_values).abs().cpu().detach().numpy() + 1e-5
     memory.update_priorities(indicies, priorities)
@@ -110,14 +111,14 @@ if __name__ == "__main__":
     # Model parameters
     hidden_units = 1024 # Number of hidden neurons
     gamma = 0.99    # Discount factor
-    epsilon = 0.5   # Initial exploration probability
+    epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
-    epsilon_decay = 0.99
+    epsilon_decay = 0.995
     learning_rate = 0.001
-    batch_size = 64
+    batch_size = 128
     max_memory_size = 10000
     n_episodes = 600
-    target_net_freq = 15    # Update frequency for target network
+    target_net_freq = 5    # Update frequency for target network
     alpha = 0.8
     beta = 0.4
     beta_increment_per_episode = 0.001
@@ -140,33 +141,39 @@ if __name__ == "__main__":
 
     # Save rewards
     rewards_history = []
+    loss_history = []
     model_saved = False
     # Start the training 
     for episode in range(n_episodes):
         state, _ = env.reset(seed=random.randint(0, 1000))
         done = False
         total_reward = 0
+        episode_loss = []
+        time_penalty = 0
 
 
         while not done:
+            time_penalty += 0.01
             action = select_action(state, policy_net, epsilon, action_dim)
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
             memory.add(state, action, reward, next_state, done)
             state = next_state
-            total_reward += reward
+            total_reward += reward - time_penalty
 
 
-            train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta)
+            train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
 
             # Check if total reward is so bad
-            if total_reward < -150:
+            if total_reward < -500:
                 print(f"Episode {episode + 1} ended early due to low reward!")
                 break
                 
         rewards_history.append(total_reward)    # Track rewards
 
+        episode_loss = np.array(episode_loss)
+        loss_history.append(episode_loss.sum() / len(episode_loss))
         # Check for early stopping for the overall training
         if total_reward > 270:
             print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
@@ -178,13 +185,13 @@ if __name__ == "__main__":
         if epsilon > epsilon_min:
             epsilon *= epsilon_decay
         
-        beta = min(1.0, beta + beta_increment_per_episode)  # Upfdate beta value
+        beta = min(1.0, beta + beta_increment_per_episode)  # Update beta value
 
         # Update the target network
         if episode % target_net_freq == 0:
             target_net.load_state_dict(policy_net.state_dict())
 
-        print(f"Episode {episode + 1}/{n_episodes}, Total Reward: {total_reward:.2f}")
+        print(f"Episode {episode + 1}/{n_episodes}, Total Reward: {total_reward:.2f}, Epsilon: {epsilon:.2f}")
 
     # If the training is completed save the model
     if not model_saved:
@@ -193,11 +200,21 @@ if __name__ == "__main__":
     env.close()
 
     # Plotting rewards
-    fig = plt.figure(figsize=(10,8))
+    plt.figure(figsize=(10, 8))
     plt.plot(rewards_history)
+    plt.title("Total Reward per Episode")
     plt.xlabel("Episode")
-    plt.ylabel("Total reward")
-    plt.title("Total Reward per episode")
+    plt.ylabel("Total Reward")
     plt.grid()
     plt.show()
+
+    # Plotting loss
+    plt.figure(figsize=(10, 8))
+    plt.plot(loss_history)
+    plt.title("Loss per Episode")
+    plt.xlabel("Episode")
+    plt.ylabel("Loss")
+    plt.grid()
+    plt.show()
+
 
