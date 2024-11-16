@@ -96,7 +96,7 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta):
         target_q_values = rewards + (1 - dones) * gamma * next_q_values
 
     # Compute the loss
-    loss = (torch.FloatTensor(weights) * (q_values.squeeze() - target_q_values)**2).mean()  # Weighted MSE
+    loss = (weights * (q_values.squeeze() - target_q_values)**2).mean()  # Weighted MSE
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
