@@ -108,7 +108,7 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta):
 if __name__ == "__main__":
 
     # Model parameters
-    hidden_units = 1024 # Number of hidden neurons
+    hidden_units = 800 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     learning_rate = 0.001
     batch_size = 64
     max_memory_size = 10000
-    n_episodes = 800
+    n_episodes = 600
     target_net_freq = 15    # Update frequency for target network
     alpha = 0.6
     beta = 0.4
