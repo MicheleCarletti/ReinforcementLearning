@@ -122,6 +122,7 @@ if __name__ == "__main__":
     alpha = 0.6
     beta = 0.4
     beta_increment_per_episode = 0.001
+    MAX_STEP = 2000
 
     # Set-up the environment
     env = gym.make("LunarLander-v3", render_mode="human")
@@ -150,6 +151,7 @@ if __name__ == "__main__":
         done = False
         total_reward = 0
         episode_loss = []
+        n_step = 0
 
 
         while not done:
@@ -163,11 +165,14 @@ if __name__ == "__main__":
 
 
             train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
+            n_step += 1
 
-            # Check if total reward is so bad
-            if total_reward < -500:
-                print(f"Episode {episode + 1} ended early due to low reward!")
+            if n_step > MAX_STEP:
                 break
+            # Check if total reward is so bad
+            #if total_reward < -500:
+                #print(f"Episode {episode + 1} ended early due to low reward!")
+                #break
                 
         rewards_history.append(total_reward)    # Track rewards
 
