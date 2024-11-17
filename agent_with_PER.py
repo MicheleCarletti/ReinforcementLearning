@@ -113,12 +113,12 @@ if __name__ == "__main__":
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
-    epsilon_decay = 0.995
+    epsilon_decay = 0.997
     learning_rate = 0.001
     batch_size = 64
     max_memory_size = 10000
     n_episodes = 600
-    target_net_freq = 5    # Update frequency for target network
+    target_net_freq = 10    # Update frequency for target network
     alpha = 0.6
     beta = 0.4
     beta_increment_per_episode = 0.001
@@ -150,7 +150,6 @@ if __name__ == "__main__":
         done = False
         total_reward = 0
         episode_loss = []
-        
 
 
         while not done:
