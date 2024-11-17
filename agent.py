@@ -63,16 +63,17 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma):
 if __name__ == "__main__":
 
     # Model parameters
-    hidden_units = 1024 # Number of hidden neurons
+    hidden_units = 100 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
-    epsilon_decay = 0.995
+    epsilon_decay = 0.997
     learning_rate = 0.001
     batch_size = 64
     max_memory_size = 10000
-    n_episodes = 800
-    target_net_freq = 15    # Update frequency for target network
+    n_episodes = 200
+    target_net_freq = 10    # Update frequency for target network
+    MAX_STEP = 2000
 
     # Set-up the environment
     env = gym.make("LunarLander-v3", render_mode="human")
@@ -98,6 +99,7 @@ if __name__ == "__main__":
         state, _ = env.reset(seed=random.randint(0, 1000))
         done = False
         total_reward = 0
+        n_step = 0
 
 
         while not done:
@@ -111,11 +113,14 @@ if __name__ == "__main__":
 
 
             train(memory, policy_net, target_net, optimizer, batch_size, gamma)
-
-            # Check if total reward is so bad
-            if total_reward < -150:
-                print(f"Episode {episode + 1} ended early due to low reward!")
+            n_step += 1
+            
+            if n_step > MAX_STEP:
                 break
+            # Check if total reward is so bad
+            #if total_reward < -150:
+                #print(f"Episode {episode + 1} ended early due to low reward!")
+                #break
                 
         rewards_history.append(total_reward)    # Track rewards
 

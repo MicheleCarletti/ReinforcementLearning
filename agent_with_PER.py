@@ -109,17 +109,17 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, lo
 if __name__ == "__main__":
 
     # Model parameters
-    hidden_units = 1024 # Number of hidden neurons
+    hidden_units = 100 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
     epsilon_decay = 0.995
     learning_rate = 0.001
-    batch_size = 128
+    batch_size = 64
     max_memory_size = 10000
     n_episodes = 600
     target_net_freq = 5    # Update frequency for target network
-    alpha = 0.8
+    alpha = 0.6
     beta = 0.4
     beta_increment_per_episode = 0.001
 
@@ -143,24 +143,24 @@ if __name__ == "__main__":
     rewards_history = []
     loss_history = []
     model_saved = False
+
     # Start the training 
     for episode in range(n_episodes):
         state, _ = env.reset(seed=random.randint(0, 1000))
         done = False
         total_reward = 0
         episode_loss = []
-        time_penalty = 0
+        
 
 
         while not done:
-            time_penalty += 0.01
             action = select_action(state, policy_net, epsilon, action_dim)
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
             
             memory.add(state, action, reward, next_state, done)
             state = next_state
-            total_reward += reward - time_penalty
+            total_reward += reward
 
 
             train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
@@ -174,7 +174,8 @@ if __name__ == "__main__":
 
         episode_loss = np.array(episode_loss)
         loss_history.append(episode_loss.sum() / len(episode_loss))
-        # Check for early stopping for the overall training
+
+        # Early stop condition to avoid overfitting
         if total_reward > 270:
             print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
             torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
