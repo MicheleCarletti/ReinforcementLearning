@@ -4,7 +4,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import random
-from collections import deque
+import csv
+import datetime
+import time
 import matplotlib.pyplot as plt
 
 
@@ -108,9 +110,34 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, lo
     priorities = (q_values.squeeze() - target_q_values).abs().cpu().detach().numpy() + 1e-5
     memory.update_priorities(indicies, priorities)
 
+def prepare_results(reward_history, mar, loss_history, hpc):
+    """ Analize training results"""
+
+    if not hpc:
+
+        # Plotting rewards
+        plt.figure(figsize=(10, 8))
+        plt.plot(reward_history, label='Reward per episode')
+        plt.plot(mar, label='Moving average (100 episodes)')
+        plt.title("Total Rewards")
+        plt.xlabel("Episode")
+        plt.ylabel("Total Reward")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+        # Plotting loss
+        plt.figure(figsize=(10, 8))
+        plt.plot(loss_history)
+        plt.title("Loss per Episode")
+        plt.xlabel("Episode")
+        plt.ylabel("Loss")
+        plt.grid()
+        plt.show()
+
 if __name__ == "__main__":
 
-    # Model parameters
+    #### Model parameters ###
     hidden_units = 128 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
@@ -119,12 +146,13 @@ if __name__ == "__main__":
     learning_rate = 0.0005
     batch_size = 64
     max_memory_size = 100000
-    n_episodes = 600
+    n_episodes = 10
     target_net_freq = 10    # Update frequency for target network
     alpha = 0.6
     beta = 0.4
     beta_increment_per_episode = 0.001
-    MAX_STEP = 2000
+    running_on_hpc = True
+    #######################
 
     # Set-up the environment
     env = gym.make("LunarLander-v3", render_mode="None")
@@ -151,89 +179,77 @@ if __name__ == "__main__":
     moving_avg_period = 100
     moving_avg_rewards = []
 
-    # Start the training 
-    for episode in range(n_episodes):
-        state, _ = env.reset(seed=random.randint(0, 1000))
-        done = False
-        total_reward = 0
-        episode_loss = []
-        n_step = 0
+    session_name = f"DQN_{hidden_units}h_{n_episodes}e_{datetime.datetime.now().strftime("%d-%m-%Y")}_PER"
+
+    with open(f"data/results/tr_{session_name}.csv", mode='w', newline="") as file:
+        writer = csv.writer(file, delimiter=';')
+        writer.writerow(["Episode", "Total Reward", "Epsilon", "Elapsed time [s]"]) # Header
+
+        # Start the training 
+        for episode in range(n_episodes):
+            start_time = time.time()
+            state, _ = env.reset(seed=random.randint(0, 1000))
+            done = False
+            total_reward = 0
+            episode_loss = []
+            n_step = 0
 
 
-        while not done:
-            action = select_action(state, policy_net, epsilon, action_dim)
-            next_state, reward, terminated, truncated, _ = env.step(action)
-            done = terminated or truncated
-            
-            memory.add(state, action, reward, next_state, done)
-            state = next_state
-            total_reward += reward
+            while not done:
+                action = select_action(state, policy_net, epsilon, action_dim)
+                next_state, reward, terminated, truncated, _ = env.step(action)
+                done = terminated or truncated
+
+                memory.add(state, action, reward, next_state, done)
+                state = next_state
+                total_reward += reward
 
 
-            train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
-            n_step += 1
-
-            #if n_step > MAX_STEP:
-                #break
-            # Check if total reward is so bad
-            #if total_reward < -500:
-                #print(f"Episode {episode + 1} ended early due to low reward!")
-                #break
-                
-        rewards_history.append(total_reward)    # Track rewards
-
-        # Compute moving average
-        if len(rewards_history) >= moving_avg_period:
-            moving_avg_rewards.append(np.mean(rewards_history[-moving_avg_period:]))
-        else:
-            moving_avg_rewards.append(np.mean(rewards_history))
-
-        episode_loss = np.array(episode_loss)
-        loss_history.append(episode_loss.sum() / len(episode_loss))
-
-        # Early stop condition to avoid overfitting
-        if total_reward > 500:
-            print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
-            torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
-            model_saved = True
-            break
-            
-        # Decrease the epsion value
-        if epsilon > epsilon_min:
-            epsilon *= epsilon_decay
+                train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
+                n_step += 1
         
-        beta = min(1.0, beta + beta_increment_per_episode)  # Update beta value
+                
+            rewards_history.append(total_reward)    # Track rewards
 
-        # Update the target network
-        if episode % target_net_freq == 0:
-            target_net.load_state_dict(policy_net.state_dict())
+            # Compute moving average
+            if len(rewards_history) >= moving_avg_period:
+                moving_avg_rewards.append(np.mean(rewards_history[-moving_avg_period:]))
+            else:
+                moving_avg_rewards.append(np.mean(rewards_history))
 
-        print(f"Episode {episode + 1}/{n_episodes}, Total Reward: {total_reward:.2f}, Epsilon: {epsilon:.2f}")
+            episode_loss = np.array(episode_loss)
+            loss_history.append(episode_loss.sum() / len(episode_loss))
+
+            # Early stop condition to avoid overfitting
+            if total_reward > 5000:
+                print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
+                torch.save(policy_net.state_dict(), f"models/models_with_PER/{session_name}.pth") # Save the model
+                model_saved = True
+                break
+            
+            # Decrease the epsion value
+            if epsilon > epsilon_min:
+                epsilon *= epsilon_decay
+        
+            beta = min(1.0, beta + beta_increment_per_episode)  # Update beta value
+
+            # Update the target network
+            if episode % target_net_freq == 0:
+                target_net.load_state_dict(policy_net.state_dict())
+            
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            print(f"Episode {episode + 1}/{n_episodes}, Total Reward: {total_reward:.2f}, Epsilon: {epsilon:.2f}, ET: {elapsed_time:.2f} s")
+            # Write episode data to CSV
+            writer.writerow([episode+1, round(total_reward,3), round(epsilon,3), round(elapsed_time,2)])
 
     # If the training is completed save the model
     if not model_saved:
-        torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
+        torch.save(policy_net.state_dict(), f"models/models_with_PER/{session_name}.pth") # Save the model
 
     env.close()
 
-    # Plotting rewards
-    plt.figure(figsize=(10, 8))
-    plt.plot(rewards_history, label='Reward per episode')
-    plt.plot(moving_avg_rewards, label='Moving average (100 episodes)')
-    plt.title("Total Rewards")
-    plt.xlabel("Episode")
-    plt.ylabel("Total Reward")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    # Plotting loss
-    plt.figure(figsize=(10, 8))
-    plt.plot(loss_history)
-    plt.title("Loss per Episode")
-    plt.xlabel("Episode")
-    plt.ylabel("Loss")
-    plt.grid()
-    plt.show()
+    prepare_results(rewards_history, moving_avg_rewards, loss_history, running_on_hpc)
 
 
