@@ -54,9 +54,10 @@ class DQN(nn.Module):
     def __init__(self, state_dim, action_dim, num_hidden):
         """ Define the model to learn the Q function"""
         super(DQN, self).__init__()
+        self.h2 = num_hidden // 2
         self.fc1 = nn.Linear(state_dim, num_hidden)
-        self.fc2 = nn.Linear(num_hidden, num_hidden)
-        self.fc3 = nn.Linear(num_hidden, action_dim)
+        self.fc2 = nn.Linear(num_hidden, self.h2)
+        self.fc3 = nn.Linear(self.h2, action_dim)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
@@ -99,6 +100,7 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, lo
     loss = (weights * (q_values.squeeze() - target_q_values)**2).mean()  # Weighted MSE
     optimizer.zero_grad()
     loss.backward()
+    torch.nn.utils.clip_grad_norm_(policy_net.parameters(), 1.0)  # gradient clipping
     optimizer.step()
 
     losses.append(loss.item())
@@ -109,14 +111,14 @@ def train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, lo
 if __name__ == "__main__":
 
     # Model parameters
-    hidden_units = 100 # Number of hidden neurons
+    hidden_units = 128 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
-    epsilon_decay = 0.997
-    learning_rate = 0.001
+    epsilon_decay = 0.995
+    learning_rate = 0.0005
     batch_size = 64
-    max_memory_size = 10000
+    max_memory_size = 100000
     n_episodes = 600
     target_net_freq = 10    # Update frequency for target network
     alpha = 0.6
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     MAX_STEP = 2000
 
     # Set-up the environment
-    env = gym.make("LunarLander-v3", render_mode="human")
+    env = gym.make("LunarLander-v3", render_mode="None")
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
 
@@ -144,6 +146,10 @@ if __name__ == "__main__":
     rewards_history = []
     loss_history = []
     model_saved = False
+
+    # Rewards moving average
+    moving_avg_period = 100
+    moving_avg_rewards = []
 
     # Start the training 
     for episode in range(n_episodes):
@@ -167,8 +173,8 @@ if __name__ == "__main__":
             train(memory, policy_net, target_net, optimizer, batch_size, gamma, beta, episode_loss)
             n_step += 1
 
-            if n_step > MAX_STEP:
-                break
+            #if n_step > MAX_STEP:
+                #break
             # Check if total reward is so bad
             #if total_reward < -500:
                 #print(f"Episode {episode + 1} ended early due to low reward!")
@@ -176,11 +182,17 @@ if __name__ == "__main__":
                 
         rewards_history.append(total_reward)    # Track rewards
 
+        # Compute moving average
+        if len(rewards_history) >= moving_avg_period:
+            moving_avg_rewards.append(np.mean(rewards_history[-moving_avg_period:]))
+        else:
+            moving_avg_rewards.append(np.mean(rewards_history))
+
         episode_loss = np.array(episode_loss)
         loss_history.append(episode_loss.sum() / len(episode_loss))
 
         # Early stop condition to avoid overfitting
-        if total_reward > 270:
+        if total_reward > 500:
             print(f"Training stopped as episode {episode + 1} achieved a good total reward: {total_reward:.2f}")
             torch.save(policy_net.state_dict(), f"models/models_with_PER/DQN_lunar_lander_{hidden_units}.pth") # Save the model
             model_saved = True
@@ -206,10 +218,12 @@ if __name__ == "__main__":
 
     # Plotting rewards
     plt.figure(figsize=(10, 8))
-    plt.plot(rewards_history)
-    plt.title("Total Reward per Episode")
+    plt.plot(rewards_history, label='Reward per episode')
+    plt.plot(moving_avg_rewards, label='Moving average (100 episodes)')
+    plt.title("Total Rewards")
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
+    plt.legend()
     plt.grid()
     plt.show()
 
