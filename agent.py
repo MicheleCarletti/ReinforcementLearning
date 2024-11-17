@@ -14,9 +14,10 @@ class DQN(nn.Module):
     def __init__(self, state_dim, action_dim, num_hidden):
         """ Define the model to learn the Q function"""
         super(DQN, self).__init__()
+        self.h2 = num_hidden // 2
         self.fc1 = nn.Linear(state_dim, num_hidden)
-        self.fc2 = nn.Linear(num_hidden, num_hidden)
-        self.fc3 = nn.Linear(num_hidden, action_dim)
+        self.fc2 = nn.Linear(num_hidden, self.h2)
+        self.fc3 = nn.Linear(self.h2, action_dim)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
