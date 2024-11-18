@@ -1,6 +1,7 @@
 import gymnasium as gym
 import torch
 from agent import DQN
+import numpy as np
 
 # Environment set-up
 env = gym.make("LunarLander-v3", render_mode="human")
@@ -12,7 +13,7 @@ hidden_units = 128
 
 # Define the pre-trained model
 model = DQN(state_dim, action_dim, hidden_units).to(device)
-model.load_state_dict(torch.load(f"models/models_with_PER/DQN_lunar_lander_{hidden_units}_toA.pth", map_location=torch.device(device)))
+model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1000e_18-11-2024_PER.pth", map_location=torch.device(device)))
 model.eval()
 
 def select_action(state, policy_net):
@@ -24,6 +25,7 @@ def select_action(state, policy_net):
 
 
 # Play for 10 episodes
+reward_res = []
 epoches = 10
 for episode in range(epoches):
     state, _ = env.reset()
@@ -38,5 +40,10 @@ for episode in range(epoches):
         total_reward += reward
     
     print(f"Episode {episode + 1}/{epoches}, Total reward: {total_reward:.2f}")
+
+    reward_res.append(total_reward)
+
+succ_prob = np.array([1 for x in reward_res if x >= 200]).sum() / epoches
+print(f"\nSuccess probability: {succ_prob}")
 
 env.close()
