@@ -6,7 +6,7 @@ This project presents a RL agent trying to solve the OpenAI Gymnasium LunarLandi
 
 `data` reward plots. Format **hu_#HiddenUnits_#Epoches_#EasrlyStopped.png**
 
-`models` pretarined models in format **DQN_lunar_lander#HiddenUnits.pth**
+`models` pretarined models in format **DQN_lunar_lander#HiddenUnitsh_#episodese_date.pth**
 
 `agent.py` Implement a DQN based agent with Replay Buffer
 
@@ -40,6 +40,11 @@ Same of the previous agent, plus
 * alpha: prioritization exponent. Controls how the buffer will encourage the importat experiences (the ones with higer error). Close to 1 -> higer prority experiences are more likely to be selected. Close to 0 -> more random sampling. Alpha = 0 -> Classi replay buffer (typical value 0.6)
 * beta: importance sampling correction coefficient. It tries to balance the bias introduced by alpha. It determines the weight during the gradients update process. At the beginnig it should be low, so the model learns more from important experience, while the training proceed, beta value is increade in order to compensate the learing bias (typical initial value 0.4)
 * beta_increment_per_episode: after each episode beta is increased to compensate the learning bias induced by alpha (typical value 0.001)
+
+## Testing
+File `test.py` contains a simple test for pretrained models.
+
+Currently the best performing version in `DQN_128h_1000e_18-11-2024_PER.pth` with a success probability of 0.9
 
 # Author
 

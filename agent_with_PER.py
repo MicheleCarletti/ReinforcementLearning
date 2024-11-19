@@ -155,7 +155,7 @@ if __name__ == "__main__":
     #######################
 
     # Set-up the environment
-    env = gym.make("LunarLander-v3", render_mode="None")
+    env = gym.make("LunarLander-v2", render_mode="None")
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
 
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     moving_avg_period = 100
     moving_avg_rewards = []
 
-    session_name = f"DQN_{hidden_units}h_{n_episodes}e_{datetime.datetime.now().strftime("%d-%m-%Y")}_PER"
+    session_name = f"DQN_{hidden_units}h_{n_episodes}e_{datetime.datetime.now().strftime('%d-%m-%Y')}_PER"
 
     with open(f"data/results/tr_{session_name}.csv", mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=';')
