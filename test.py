@@ -9,11 +9,11 @@ state_dim = env.observation_space.shape[0]
 action_dim = env.action_space.n
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-hidden_units = 256
+hidden_units = 128
 
 # Define the pre-trained model
 model = DQN(state_dim, action_dim, hidden_units).to(device)
-model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1500e_19-11-2024_PER.pth", map_location=torch.device(device)))
+model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1000e_18-11-2024_PER.pth", map_location=torch.device(device)))
 model.eval()
 
 def select_action(state, policy_net):
@@ -26,7 +26,7 @@ def select_action(state, policy_net):
 
 # Play for 10 episodes
 reward_res = []
-epoches = 10
+epoches = 20
 for episode in range(epoches):
     state, _ = env.reset()
     done = False
