@@ -155,7 +155,7 @@ if __name__ == "__main__":
     #######################
 
     # Set-up the environment
-    env = gym.make("LunarLander-v2", render_mode="None")
+    env = gym.make("LunarLander-v3", render_mode="None")
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
 
