@@ -138,7 +138,7 @@ def prepare_results(reward_history, mar, loss_history, hpc):
 if __name__ == "__main__":
 
     #### Model parameters ###
-    hidden_units = 256 # Number of hidden neurons
+    hidden_units = 128 # Number of hidden neurons
     gamma = 0.99    # Discount factor
     epsilon = 1.0   # Initial exploration probability
     epsilon_min = 0.01  
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     learning_rate = 0.0005
     batch_size = 64
     max_memory_size = 100000
-    n_episodes = 1500
+    n_episodes = 1600
     target_net_freq = 10    # Update frequency for target network
     alpha = 0.6
     beta = 0.4
