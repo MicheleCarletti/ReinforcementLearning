@@ -119,7 +119,7 @@ def prepare_results(reward_history, mar, loss_history, hpc):
         plt.figure(figsize=(10, 8))
         plt.plot(reward_history, label='Reward per episode')
         plt.plot(mar, label='Moving average (100 episodes)')
-        plt.title("Total Rewards")
+        plt.title(f"Total Rewards\n[{session_name}]")
         plt.xlabel("Episode")
         plt.ylabel("Total Reward")
         plt.legend()
@@ -129,7 +129,7 @@ def prepare_results(reward_history, mar, loss_history, hpc):
         # Plotting loss
         plt.figure(figsize=(10, 8))
         plt.plot(loss_history)
-        plt.title("Loss per Episode")
+        plt.title(f"Loss per Episode\n[{session_name}]")
         plt.xlabel("Episode")
         plt.ylabel("Loss")
         plt.grid()
