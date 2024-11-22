@@ -13,7 +13,7 @@ hidden_units = 128
 
 # Define the pre-trained model
 model = DQN(state_dim, action_dim, hidden_units).to(device)
-model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1600e_21-11-2024_PER.pth", map_location=torch.device(device)))
+model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1700e_22-11-2024_PER.pth", map_location=torch.device(device)))
 model.eval()
 
 def select_action(state, policy_net):

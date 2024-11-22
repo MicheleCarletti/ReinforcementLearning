@@ -146,7 +146,7 @@ if __name__ == "__main__":
     learning_rate = 0.0005
     batch_size = 64
     max_memory_size = 100000
-    n_episodes = 1600
+    n_episodes = 1700
     target_net_freq = 10    # Update frequency for target network
     alpha = 0.6
     beta = 0.4
