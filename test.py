@@ -9,11 +9,11 @@ state_dim = env.observation_space.shape[0]
 action_dim = env.action_space.n
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-hidden_units = 128
+hidden_units = 256
 
 # Define the pre-trained model
 model = DQN(state_dim, action_dim, hidden_units).to(device)
-model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_1700e_22-11-2024_PER.pth", map_location=torch.device(device)))
+model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_6000e_22-11-2024_PER.pth", map_location=torch.device(device)))
 model.eval()
 
 def select_action(state, policy_net):
