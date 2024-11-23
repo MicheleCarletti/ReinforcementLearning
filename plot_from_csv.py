@@ -1,3 +1,9 @@
+"""
+@auhor Michele Carletti
+
+Given training results in .csv file, plot reward per episode and moving average on 100 episodes
+"""
+
 import csv
 import os
 import matplotlib.pyplot as plt

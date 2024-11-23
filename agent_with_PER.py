@@ -1,3 +1,7 @@
+"""
+@auhor Michele Carletti
+DQN based agent for LunarLander-v3 with Prioritized Experience Replay Buffer
+"""
 import gymnasium as gym
 import numpy as np
 import torch

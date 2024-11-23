@@ -1,10 +1,15 @@
+"""
+@author Michele Carletti
+Test a single pre-trained model 
+"""
+
 import gymnasium as gym
 import torch
 from agent import DQN
 import numpy as np
 
 # Environment set-up
-env = gym.make("LunarLander-v3", render_mode="human")
+env = gym.make("LunarLander-v3", render_mode="None")
 state_dim = env.observation_space.shape[0]
 action_dim = env.action_space.n
 
@@ -13,7 +18,7 @@ hidden_units = 256
 
 # Define the pre-trained model
 model = DQN(state_dim, action_dim, hidden_units).to(device)
-model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_6000e_22-11-2024_PER.pth", map_location=torch.device(device)))
+model.load_state_dict(torch.load(f"models/models_with_PER/DQN_{hidden_units}h_6000e_22-11-2024_PER_hpc.pth", map_location=torch.device(device)))
 model.eval()
 
 def select_action(state, policy_net):
@@ -26,7 +31,7 @@ def select_action(state, policy_net):
 
 # Play for 10 episodes
 reward_res = []
-epoches = 50
+epoches = 300
 for episode in range(epoches):
     state, _ = env.reset()
     done = False
