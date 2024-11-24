@@ -11,9 +11,11 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-num_epochs = 5000
+num_epochs = 10000
 folder_path = "./test_batch/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+start_seed = np.random.randint(1,50)
+running_on_hpc = False
 
 def extract_hu(filename):
     """ Given model's name, returns the number of hidden units in first layer (hu)"""
@@ -67,10 +69,11 @@ def run_test(fpath, epoches, state_dim, action_dim, env):
 
         for i in range(len(models)):    # Iterate on models
 
-            seed = 42 + e   # Guarantee that each model is tested in the same environment
+            seed = start_seed + e   # Guarantee that each model is tested in the same environment
             state,_ = env.reset(seed=seed)
             done = False
             total_reward = 0
+            
 
 
             while not done:
@@ -123,7 +126,11 @@ if __name__ == "__main__":
     plt.ylabel("Reward")
     plt.legend()
     plt.grid()
-    plt.show()
+
+    if running_on_hpc:
+        plt.savefig(f'./data/Test_batch_{num_epochs}e.png')
+    else:
+        plt.show()
 
                 
 
