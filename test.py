@@ -31,7 +31,7 @@ def select_action(state, policy_net):
 
 # Play for 10 episodes
 reward_res = []
-epoches = 10
+epoches = 60
 for episode in range(epoches):
     state, _ = env.reset()
     done = False
