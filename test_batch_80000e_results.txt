@@ -1,0 +1,4 @@
+Model: DQN_128h_1700e_22-11-2024_PER   success probability: 0.90
+Model: DQN_256h_6000e_22-11-2024_PER_hpc   success probability: 0.90
+Model: DQN_256h_10000e_23-11-2024_PER_hpc   success probability: 1.00
+Model: DQN_128h_1600e_21-11-2024_PER   success probability: 0.92
