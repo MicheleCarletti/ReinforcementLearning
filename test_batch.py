@@ -11,7 +11,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-num_epochs = 10000
+num_epochs = 200
 folder_path = "./test_batch/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 start_seed = np.random.randint(1,50)

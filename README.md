@@ -37,14 +37,16 @@ DQN approach with Prioritized Experience Replay (PER) Buffer. Examples used for 
 **Parameter**
 
 Same of the previous agent, plus
-* alpha: prioritization exponent. Controls how the buffer will encourage the importat experiences (the ones with higer error). Close to 1 -> higer prority experiences are more likely to be selected. Close to 0 -> more random sampling. Alpha = 0 -> Classi replay buffer (typical value 0.6)
+* alpha: prioritization exponent. Controls how the buffer will encourage the importat experiences (the ones with higer error). Close to 1 -> higer prority experiences are more likely to be selected. Close to 0 -> more random sampling. Alpha = 0 -> Class replay buffer (typical value 0.6)
 * beta: importance sampling correction coefficient. It tries to balance the bias introduced by alpha. It determines the weight during the gradients update process. At the beginnig it should be low, so the model learns more from important experience, while the training proceed, beta value is increade in order to compensate the learing bias (typical initial value 0.4)
 * beta_increment_per_episode: after each episode beta is increased to compensate the learning bias induced by alpha (typical value 0.001)
 
 ## Testing
 File `test.py` contains a simple test for pretrained models.
 
-Currently the best performing version in `DQN_128h_1000e_18-11-2024_PER.pth` with a success probability of 0.9
+File `test_batch.py` allows to test multiple models under the same conditions. Models parameters `.pth` files are in `test_batch` folder.
+
+Currently the best performing version in `DQN_256h_10000e_23-11-2024_PER_hpc.pth` with a success probability of 0.9
 
 # Author
 
