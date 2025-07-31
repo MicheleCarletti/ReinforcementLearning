@@ -48,12 +48,6 @@ File `test_batch.py` allows to test multiple models under the same conditions. M
 
 Currently the best performing version in `DQN_256h_10000e_23-11-2024_PER_hpc.pth` with a success probability of 1.0 on 80000 test episodes.
 
-# Author
-
-|Name|Email|
-|----|-----|
-|Michele Carletti|michelecarletti98@gmail.com|
-
 
 
 
